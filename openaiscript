@@ -4,7 +4,7 @@ library(reticulate)
 library(purrr)
 
 Sys.setenv(openai_organization_id = "org-ajcHlRFCpOFe2o7Fm392x2BL")
-Sys.setenv(openai_secret_key = "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")
+Sys.setenv(openai_secret_key = "###")
 
 course_gpt3 <- function(val, temp){
   
