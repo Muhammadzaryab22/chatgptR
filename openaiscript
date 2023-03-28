@@ -1,0 +1,107 @@
+library(tidyverse)
+library(openai)
+library(reticulate)
+library(purrr)
+
+Sys.setenv(openai_organization_id = "org-ajcHlRFCpOFe2o7Fm392x2BL")
+Sys.setenv(openai_secret_key = "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")
+
+course_gpt3 <- function(val, temp){
+  
+  initPrompt <- "Classify each comment into positive or negative"
+  kw1 <- "Fantastic"
+  Cl1 <- "positive"
+  
+  kw2 <- "sweet"
+  Cl2 <- "positive"
+  
+  kw3 <- "awful"
+  Cl3 <- "negative"
+  
+  kw4 <- "need more of this"
+  Cl4 <- "positive"
+  
+  kw5 <- "this is bad"
+  Cl5 <- "negative"
+  
+  
+  catPrompt = paste0("prompt : ", initPrompt,
+                     "\ndish: " , kw1 , ", country :" , Cl1 ,
+                     "\ndish: " , kw2 , ", country :" , Cl2 ,
+                     "\ndish: " , kw3 , ", country :" , Cl3 ,
+                     "\ndish: " , kw4 , ", country :" , Cl4 ,
+                     "\ndish: " , kw5 , ", country :" , Cl5 ,
+                     "\n\ndish: ",val,", country :")
+  
+  result <- create_completion(
+    model = "gpt-3.5-turbo",
+    max_tokens = 5,
+    temperature = temp,
+    top_p = 1,
+    n = 1,
+    stream = F, 
+    prompt = catPrompt,
+    openai_api_key = "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",
+    openai_organization = "org-ajcHlRFCpOFe2o7Fm392x2BL") %>% 
+    pluck('choices') %>% .$text
+#    map_chr(~ .x$text)
+  
+  strsplit(result,"\n")[[1]][1]
+  
+}
+
+df <- data.frame(Bio= c("BEST FOR: Hip-Hop vibes, get to know @thisartist###", "@XYZ is a one of the biggest breakthrough artist ###artisttowatch###", "which one of the following songs would you add to your playlist?###"))
+
+###creating a function
+campaignclass <- function(text){
+  create_completion(model = "davinci:ft-personal:campaignclassification-2023-02-28-23-07-47",
+                    max_tokens = 3,
+                    temperature = 0.9,
+                    top_p = 1,
+                    n = 1,
+                    stream = F, 
+                    prompt = text,
+                    openai_api_key = "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",
+                    openai_organization = "org-ajcHlRFCpOFe2o7Fm392x2BL") %>%  pluck('choices') %>% .$text
+}
+
+df1 <- df %>% rowwise() %>% mutate(campaign= campaignclass(Bio))
+
+
+result2 <- create_completion(
+  model = "davinci:ft-personal:campaignclassification-2023-02-28-23-07-47",
+  max_tokens = 3,
+  temperature = 0.7,
+  top_p = 1,
+  n = 1,
+  stream = F, 
+  prompt = "BEST FOR: a good vibe, get to know xyz###",
+  openai_api_key = "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",
+  openai_organization = "org-ajcHlRFCpOFe2o7Fm392x2BL"
+)   %>%  pluck('choices') %>% .$text
+
+course_gpt3("matcha tea", 0.2)
+
+
+
+### sentiment analysis
+
+result2 <- create_completion(
+  model = "gpt-3.5-turbo",
+  max_tokens = 3,
+  temperature = 0.7,
+  top_p = 1,
+  n = 1,
+  stream = F, 
+  prompt = "Whats the R code to read a csv file?",
+  openai_api_key = "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",
+  openai_organization = "org-ajcHlRFCpOFe2o7Fm392x2BL"
+)   %>%  pluck('choices') %>% .$text
+
+
+data1 <- read.csv("/Users/muhammad.zaryab/Downloads/sentiscoresfeb - bindedlist2.csv")
+datashort <- head(data1, 15)
+
+#datashort <- datashort %>% add_row(Post.number=20, hreflinks="www.xyz.com", comments= "🤢")
+
+datashort2 <- datashort %>% rowwise() %>% mutate(sentiment2= course_gpt3(comments, 0.7))
